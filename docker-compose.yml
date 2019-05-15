@@ -41,7 +41,7 @@ services:
     restart: 'no'
     environment:
       - CELERY_BROKER=${CELERY_BROKER}
-    command: celery -A worker_celery worker --concurrency=20 --loglevel=DEBUG
+    command: celery worker -A core --concurrency=4 --loglevel=DEBUG
     volumes:
       - ./app:/app
     links:
