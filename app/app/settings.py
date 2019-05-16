@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'django_filters',
     'core',
     'crawler',
-    'crawler.celery_tasks',
+    'crawler.celery_tasks.tasks',
 ]
 
 MIDDLEWARE = [

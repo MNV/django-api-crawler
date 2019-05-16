@@ -20,6 +20,8 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
+    links:
+      - db
     depends_on:
       - db
 
@@ -41,13 +43,34 @@ services:
     restart: 'no'
     environment:
       - CELERY_BROKER=${CELERY_BROKER}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
     command: celery worker -A core --concurrency=4 --loglevel=DEBUG
     volumes:
       - ./app:/app
     links:
+      - app
       - rabbitmq
     depends_on:
+      - app
+      - db
       - rabbitmq
+
+  # Periodic tasks scheduler
+  celery-beat:
+    build: .
+    command: celery -A core beat
+    volumes:
+      - ./app:/app
+    environment:
+      - C_FORCE_ROOT=true
+      - CELERY_BROKER=${CELERY_BROKER}
+    depends_on:
+      - app
+      - celery
+    restart: 'always'
 
   # Celery monitoring
   flower:

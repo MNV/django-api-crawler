@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 from django.conf import settings
 
 
@@ -22,7 +23,10 @@ app.config_from_object('django.conf:settings')
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks(settings.INSTALLED_APPS)
 
-
-@app.task(bind=True)
-def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
+app.conf.beat_schedule = {
+    # Executes every hour
+    'import-hotels-every-hour': {
+        'task': 'crawler.celery_tasks.tasks.import_hotels',
+        'schedule': crontab(minute=0),
+    },
+}

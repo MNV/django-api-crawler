@@ -1,23 +1,42 @@
 from __future__ import absolute_import, unicode_literals
 
 import logging
-from celery.schedules import crontab
-from celery.task import periodic_task
-from django.core import management
+
+from core.celery import app
+from crawler.api.api_jael import ApiJael
+
 
 logger = logging.getLogger(__name__)
 
 
-@periodic_task(run_every=crontab(minute=0, hour=0))
-def import_hotels(*args, **kwargs):
+@app.task()
+def import_hotels():
     """
-    Execute daily at midnight.
-    :param args:
-    :param kwargs:
-    :return:
+    Import hotels asynchronously.
     """
     try:
         logger.info('import_hotels')
-        management.call_command('import_hotels')
+
+        api_list = (
+            ApiJael(),
+        )
+
+        for api_object in api_list:
+            import_data.delay(api_object.__class__.__name__)
+
     except Exception as err:
         logger.error('import_hotels error: {}'.format(err))
+
+
+@app.task()
+def import_data(api_class_name: str):
+    """
+    Import hotels data.
+    :param api_class_name:
+    :return:
+    """
+    class_name = globals()[api_class_name]
+    api_object = class_name()
+    imported_rows = api_object.process_import()
+
+    logger.info('import_hotels: successfully imported {} rows'.format(imported_rows))
